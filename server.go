@@ -13,12 +13,18 @@ func ConnectNewClient() {
 		DB: 0,
 		})
 	
-	_, err := client.Subscribe("test1")
+	pubsub, err := client.Subscribe("test1")
 	if err != nil{
 		fmt.Println(" error ")
 	}
-	fmt.Println("siii")
-
+	for{
+		message, err := pubsub.ReceiveMessage()
+		if err != nil{
+			fmt.Println("No es posible leer el mensaje")
+		}
+		fmt.Println(message.Channel)
+		fmt.Println(message.Payload)
+	}
 }
 
 func main() {
