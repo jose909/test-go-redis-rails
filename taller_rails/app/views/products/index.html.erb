@@ -30,3 +30,13 @@
 <br>
 
 <%= link_to 'New Product', new_product_path %>
+<script type="text/javascript">
+  $(document).ready(function(){
+
+    var conexion = new WebSocket("ws://localhost:8000/subscribe/")
+    conexion.onopen = function(response)
+      conexion.onmessage = function(response){
+        alert("llego algo")
+    }
+  });
+</script>

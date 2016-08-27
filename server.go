@@ -21,7 +21,9 @@ type Client struct{
 }
 
 var Clients = make(map[int]Client)
-func ConnectNewClient() {
+
+
+func ConnectNewClient(request_chanel chan Request) {
 	client := redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 		Password: "",
@@ -44,16 +46,20 @@ func ConnectNewClient() {
 		}
 		fmt.Println(request.Name)
 		fmt.Println(request.Id)
+
+		request_chanel <- request
 		//fmt.Println(message.Channel)
 		//fmt.Println(message.Payload)
 	}
 }
 
 func main() {
-	go ConnectNewClient()
+	Channel_request := make (chan Request)
+	go ConnectNewClient(Channel_request)
+	go ValidateChanel(Channel_request)
 
 	mux := mux.NewRouter()
-	mux.HandleFunc("/Subscribe/", Subscribe).Methods("GET")
+	mux.HandleFunc("/subscribe/", Subscribe).Methods("GET")
 	http.Handle("/", mux)
 	fmt.Println("El servidor se encuentra en el puerto 8000")
 	http.ListenAndServe(":8000", nil)
@@ -77,4 +83,22 @@ func Subscribe(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+}
+
+func ValidateChanel(request chan Request){
+	for{
+		select{
+			case r := <- request:
+			SendMessage(r)//Enviar mensaje
+		}
+	}
+}
+
+func SendMessage(request Request) {
+	for _, client := range Clients{
+		if err := client.websocket.WriteJSON(request); err!= nil{
+			return
+		}
+	}
+	
 }
